@@ -34,15 +34,19 @@ show_system_details() {
     echo -e "\e[32mSystem Details:\nIP: $IP\nRAM: ${RAM}MB\nCPU: $CPU\nStorage: $STORAGE\e[0m" # Green color
 }
 
-# ASCII Banner
-echo -e "\e[33m   _____   _    _   _____                         _           \e[0m"
-echo -e "\e[33m  / ____| | |  | | |  __ \        /\             | |          \e[0m"
-echo -e "\e[33m | |      | |__| | | |__) |      /  \     _   _  | |_    ___  \e[0m"
-echo -e "\e[33m | |      |  __  | |  _  /      / /\ \   | | | | | __|  / _ \ \e[0m"
-echo -e "\e[33m | |____  | |  | | | | \ \     / ____ \  | |_| | | |_  | (_) |\e[0m"
-echo -e "\e[33m  \_____| |_|  |_| |_|  \_\   /_/    \_\  \__,_|  \__|  \___/ \e[0m"
-echo -e "\e[33m                                                              \e[0m"
-echo -e "\e[33m                            === By Mostech ===                 \e[0m"
+# ASCII Banner - Ars CHR Installer
+clear
+echo -e "\e[1;36m==================================================================\e[0m"
+echo -e "\e[1;32m     _          _      _____ _    _ _____    _____ _    _ _____  \e[0m"
+echo -e "\e[1;32m    / \        | |    / ____| |  | |  __ \  / ____| |  | |  __ \ \e[0m"
+echo -e "\e[1;32m   / _ \       | |   | |    | |__| | |__) || |    | |__| | |__) |\e[0m"
+echo -e "\e[1;33m  / ___ \      | |   | |    |  __  |  _  / | |    |  __  |  _  / \e[0m"
+echo -e "\e[1;33m /_/   \_\     |_|    \_____|_|  |_|_| \_\  \_____|_|  |_|_| \_\ \e[0m"
+echo -e "\e[1;36m==================================================================\e[0m"
+echo -e "\e[1;35m          >>> AUTOMATED MIKROTIK CHR NATIVE INSTALLER <<<        \e[0m"
+echo -e "\e[1;35m          >>>              Created by Ars               <<<        \e[0m"
+echo -e "\e[1;36m==================================================================\e[0m"
+echo ""
 
 
 # Check if the user is root
