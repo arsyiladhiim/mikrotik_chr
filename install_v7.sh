@@ -75,18 +75,32 @@ INTERFACE_GATEWAY=$(ip route show | grep default | awk '{print $3}')
     rm -rf routeros.zip
 } & show_loading
 
-{
-    mount -o loop,offset=512 chr-$CHR_VERSION.img /mnt > /dev/null 2>&1
-} & show_loading
+# 1. Pastikan folder mount ada
+mkdir -p /mnt
 
+# 2. Lakukan mount dengan pengecekan (hapus background/loading sesaat agar error terlihat jika gagal)
+if ! mount -o loop,offset=512 chr-$CHR_VERSION.img /mnt; then
+    echo -e "\e[31m[!] Gagal melakukan mount image CHR. Mencoba tanpa offset...\e[0m"
+    if ! mount -o loop chr-$CHR_VERSION.img /mnt; then
+        echo -e "\e[31m[!] Error: Mount image gagal total. Periksa kembali versi file image Anda.\e[0m"
+        exit 1
+    fi
+fi
+
+# 3. Pastikan folder /mnt/rw ada di dalam image yang dimount
+mkdir -p /mnt/rw
+
+# 4. Tulis konfigurasi autorun.scr
 echo "/ip address add address=${INTERFACE_IP} interface=[/interface ethernet find where name=ether1]
 /ip route add gateway=${INTERFACE_GATEWAY}
 " > /mnt/rw/autorun.scr
 
+# 5. Unmount dan tulis ke disk VPS (dd) dengan aman
 {
+    sync
     umount /mnt > /dev/null 2>&1
     echo u > /proc/sysrq-trigger
-    dd if=chr-$CHR_VERSION.img of=/dev/${DISK} bs=1M > /dev/null 2>&1
+    dd if=chr-$CHR_VERSION.img of=/dev/${DISK} bs=4M status=progress conv=fsync
 } & show_loading
 
 echo -e "\e[32mInstallation complete. Reboot your server now, Please log in and configure your password using Winbox.\e[0m" # Green color
