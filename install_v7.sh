@@ -75,30 +75,42 @@ INTERFACE_GATEWAY=$(ip route show | grep default | awk '{print $3}')
     rm -rf routeros.zip
 } & show_loading
 
+echo -e "\e[33m[+] Mempersiapkan dan mengonfigurasi image CHR...\e[0m"
+
 # 1. Pastikan folder mount ada
 mkdir -p /mnt
 
-# 2. Lakukan mount dengan pengecekan (hapus background/loading sesaat agar error terlihat jika gagal)
-if ! mount -o loop,offset=512 chr-$CHR_VERSION.img /mnt; then
-    echo -e "\e[31m[!] Gagal melakukan mount image CHR. Mencoba tanpa offset...\e[0m"
-    if ! mount -o loop chr-$CHR_VERSION.img /mnt; then
-        echo -e "\e[31m[!] Error: Mount image gagal total. Periksa kembali versi file image Anda.\e[0m"
+# 2. Gunakan losetup dengan partscan agar partisi di dalam file .img langsung terbaca otomatis
+LOOP_DEV=$(losetup --find --show --partscan chr-$CHR_VERSION.img)
+
+# 3. Mount partisi pertama dari loop device tersebut (biasanya p1)
+if mount "${LOOP_DEV}p1" /mnt; then
+    echo -e "\e[32m[+] Berhasil mount partisi CHR via ${LOOP_DEV}p1\e[0m"
+else
+    # Fallback jika penamaan partisi berbeda
+    mount "${LOOP_DEV}" /mnt || {
+        echo -e "\e[31m[!] Error: Gagal total melakukan mount partisi image CHR.\e[0m"
+        losetup -d "$LOOP_DEV"
         exit 1
-    fi
+    }
 fi
 
-# 3. Pastikan folder /mnt/rw ada di dalam image yang dimount
+# 4. Pastikan folder rw ada di dalam image, lalu buat file autorun.scr
 mkdir -p /mnt/rw
-
-# 4. Tulis konfigurasi autorun.scr
-echo "/ip address add address=${INTERFACE_IP} interface=[/interface ethernet find where name=ether1]
+cat <<EOF > /mnt/rw/autorun.scr
+/ip address add address=${INTERFACE_IP} interface=[/interface ethernet find where name=ether1]
 /ip route add gateway=${INTERFACE_GATEWAY}
-" > /mnt/rw/autorun.scr
+EOF
 
-# 5. Unmount dan tulis ke disk VPS (dd) dengan aman
+# 5. Sync, unmount, dan bersihkan losetup
+sync
+umount /mnt
+losetup -d "$LOOP_DEV"
+
+echo -e "\e[32m[+] Konfigurasi autorun berhasil disisipkan!\e[0m"
+
+# 6. Proses tulis ke disk VPS (dd)
 {
-    sync
-    umount /mnt > /dev/null 2>&1
     echo u > /proc/sysrq-trigger
     dd if=chr-$CHR_VERSION.img of=/dev/${DISK} bs=4M status=progress conv=fsync
 } & show_loading
