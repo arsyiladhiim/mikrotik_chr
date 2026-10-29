@@ -35,13 +35,16 @@ Clone repositori ini ke dalam direktori VPS Anda:
 git clone [https://github.com/arsyiladhiim/mikrotik_chr.git](https://github.com/arsyiladhiim/mikrotik_chr.git)
 cd mikrotik_chr
 
-chmod +x install_v6.sh install_v7.sh
+Opsi A: Untuk menginstal MikroTik CHR Versi 7
+chmod +x install_v7.sh
 sudo apt-get update
 sudo apt-get install -y dos2unix
-dos2unix install_v6.sh install_v7.sh
-
-Opsi A: Untuk menginstal MikroTik CHR Versi 7
+dos2unix install_v7.sh
 bash install_v7.sh
 
 Opsi B: Untuk menginstal MikroTik CHR Versi 6
+chmod +x install_v6.sh
+sudo apt-get update
+sudo apt-get install -y dos2unix
+dos2unix install_v6.sh
 bash install_v6.sh

@@ -142,13 +142,16 @@ show_system() {
     echo "=================================================="
 }
 
+
 detect_disk() {
     echo
+
     if [[ -z "$DISK" ]]; then
-        read -r -p "Target disk (example /dev/vda): " DISK
+        read -r -p "Target disk (example /dev/sda): " DISK
     fi
 
-    [[ -b "$DISK" ]] || die "Invalid block device: $DISK"
+    [[ -b "$DISK" ]] ||
+        die "Invalid block device: $DISK"
 
     DISK=$(readlink -f "$DISK")
 
@@ -161,37 +164,43 @@ detect_disk() {
             ;;
     esac
 
-    log "Checking disk usage..."
+    log "Checking target disk usage..."
 
+    local device
     local children
+    local mounted
+    local root_source
+    local root_backing
+
     children=$(lsblk -nrpo NAME "$DISK")
 
-    while IFS= read -r device; do
-        if findmnt -rn -S "$device" >/dev/null 2>&1; then
-            die "$device is mounted. Boot into Rescue Mode first."
-        fi
-
-        if [[ "$(lsblk -dn -o MOUNTPOINTS "$device")" != "" ]]; then
-            die "$device has mounted filesystems."
-        fi
-
-        if [[ "$(swapon --noheadings --raw --output NAME 2>/dev/null || true)" == *"$device"* ]]; then
-            die "$device is used for swap."
-        fi
-    done <<< "$children"
-
-    # Reject disks backing active root filesystem, including
-    # partition, device-mapper and common layered block setups.
-    local root_source root_parent
+    # Check active root filesystem and its backing devices.
     root_source=$(findmnt -n -o SOURCE / || true)
-    root_parent=$(lsblk -spno NAME "$root_source" 2>/dev/null || true)
 
-    if grep -Fxq "$DISK" <<< "$root_parent"; then
-        die "Target disk backs the active root filesystem."
+    root_backing=$(lsblk -spno NAME "$root_source" 2>/dev/null || true)
+
+    if grep -Fxq "$DISK" <<< "$root_backing"; then
+        die "Target disk contains the running OS. Use Rescue Mode."
     fi
 
-    # Check kernel holder relationships.
+    # Check all mounted partitions.
     while IFS= read -r device; do
+        mounted=$(findmnt -rn -S "$device" -o TARGET || true)
+
+        if [[ -n "$mounted" ]]; then
+            die "$device is mounted at $mounted. Use Rescue Mode."
+        fi
+
+        if lsblk -nr -o MOUNTPOINT "$device" |
+            grep -q '[^[:space:]]'; then
+            die "$device contains an active mount."
+        fi
+
+        if swapon --noheadings --raw --output NAME 2>/dev/null |
+            grep -Fxq "$device"; then
+            die "$device is used as swap."
+        fi
+
         local base
         base=$(basename "$device")
 
@@ -199,10 +208,12 @@ detect_disk() {
            [[ -n "$(ls -A "/sys/class/block/$base/holders")" ]]; then
             die "$device has active block-device holders."
         fi
+
     done <<< "$children"
 
-    success "Target disk: $DISK"
+    success "Target disk validated: $DISK"
 }
+
 
 get_network() {
     log "Detecting network configuration..."
