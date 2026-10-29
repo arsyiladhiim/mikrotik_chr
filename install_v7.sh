@@ -143,6 +143,7 @@ show_system() {
 }
 
 
+
 detect_disk() {
     echo
 
@@ -213,6 +214,7 @@ detect_disk() {
 
     success "Target disk validated: $DISK"
 }
+
 
 
 get_network() {
