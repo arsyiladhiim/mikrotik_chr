@@ -9,7 +9,7 @@ set -Eeuo pipefail
 
 CHR_VERSION="${CHR_VERSION:-7.25}"
 WORKDIR="${WORKDIR:-/tmp/chr-installer}"
-IMAGE_URL="https://github.com/elseif/MikroTikPatch/releases/download/$CHR_VERSION/chr-$CHR_VERSION-legacy-bios.img.zip"
+IMAGE_URL="https://github.com/elseif/MikroTikPatch/releases/download/${CHR_VERSION}/chr-${CHR_VERSION}-legacy-bios.img.zip"
 
 DISK="${DISK:-}"
 LOOPDEV=""
