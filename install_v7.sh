@@ -61,7 +61,7 @@ echo -e "\e[34mPreparation ...\e[0m" # Blue color
 } & show_loading
 
 # Latest Stable
-CHR_VERSION=7.16.2
+CHR_VERSION=7.21.4
 
 # Environment
 DISK=$(lsblk | grep "disk" | head -n 1 | cut -d' ' -f1)
